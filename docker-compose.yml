@@ -1,0 +1,7 @@
+services:
+  movies-api:
+    build:
+      context: https://github.com/danielubaya/movies-api-python.git#main
+    ports:
+      - "50703:8000"
+    restart: unless-stopped
