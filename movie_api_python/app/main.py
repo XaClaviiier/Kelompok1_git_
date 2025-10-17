@@ -1,4 +1,4 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 import mysql.connector
 
 # ==== DATABASE SETTING ====
@@ -21,6 +21,7 @@ def get_db_conn():
         password=DB_PASSWORD, database=DB_NAME
     )
 
+# === Endpoint 1: Ambil semua movie dengan poster ===
 @app.route("/movies/posters", methods=["GET"])
 def get_movies_with_posters():
     sql = """
@@ -45,7 +46,13 @@ def get_movies_with_posters():
         except:
             pass
 
-
-if __name__ == "__main__":
-    print("Flask routes:", app.url_map)
-    app.run(host="0.0.0.0", port=8000)
+# === Endpoint 2: tampilkan semua movie ===
+@app.get("/movies")
+def get_movies():
+    sql = f"SELECT * FROM movies LIMIT 50;"
+    try:
+        conn = get_db_conn()
+        cur = conn.cursor()
+        cur.execute(sql)
+        cols = [d[0] for d in cur.description]
+        data = [dict(zip(col]()
