@@ -1,4 +1,4 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 import mysql.connector
 
 # ==== HARD-CODED SETTINGS (change here for your class) ====
@@ -17,13 +17,34 @@ def get_db_conn():
         password=DB_PASSWORD, database=DB_NAME
     )
 
+# === Endpoint 1: tampilkan semua movie ===
 @app.get("/movies")
 def get_movies():
-    sql = f"SELECT * FROM  movies LIMIT 50;"
+    sql = f"SELECT * FROM movies LIMIT 50;"
     try:
         conn = get_db_conn()
         cur = conn.cursor()
         cur.execute(sql)
+        cols = [d[0] for d in cur.description]
+        data = [dict(zip(cols, row)) for row in cur.fetchall()]
+        return jsonify(data)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        try:
+            cur.close(); conn.close()
+        except Exception:
+            pass
+
+# === Endpoint 2: filter movie berdasarkan judul ===
+@app.get("/movies/filter")
+def filter_movies():
+    title = request.args.get("title", "")
+    sql = f"SELECT * FROM movies WHERE title LIKE %s LIMIT 50;"
+    try:
+        conn = get_db_conn()
+        cur = conn.cursor()
+        cur.execute(sql, (f"%{title}%",))
         cols = [d[0] for d in cur.description]
         data = [dict(zip(cols, row)) for row in cur.fetchall()]
         return jsonify(data)
