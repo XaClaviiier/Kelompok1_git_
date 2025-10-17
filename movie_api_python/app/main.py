@@ -36,6 +36,7 @@ def get_movies():
         except Exception:
             pass
 
+
 # === Endpoint 2: filter movie berdasarkan judul ===
 @app.get("/movies/filter")
 def filter_movies():
