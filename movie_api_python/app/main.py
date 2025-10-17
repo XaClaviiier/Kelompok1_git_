@@ -1,15 +1,19 @@
 from flask import Flask, jsonify, request
 import mysql.connector
 
-# ==== HARD-CODED SETTINGS (change here for your class) ====
+# ==== DATABASE SETTING ====
 DB_HOST = "103.16.116.159"
 DB_PORT = 3306
 DB_USER = "devops"
 DB_PASSWORD = "ubaya"
-DB_NAME = "movie"   # change if your DB name differs
-# ==========================================================
+DB_NAME = "movie"
+# ==========================
 
 app = Flask(__name__)
+
+@app.route("/")
+def home():
+    return "Server Flask aktif dan siap!"
 
 def get_db_conn():
     return mysql.connector.connect(
@@ -17,10 +21,15 @@ def get_db_conn():
         password=DB_PASSWORD, database=DB_NAME
     )
 
-# === Endpoint 1: tampilkan semua movie ===
-@app.get("/movies")
-def get_movies():
-    sql = f"SELECT * FROM movies LIMIT 50;"
+# === Endpoint 1: Ambil semua movie dengan poster ===
+@app.route("/movies/posters", methods=["GET"])
+def get_movies_with_posters():
+    sql = """
+        SELECT m.id, m.title, p.poster AS poster_url
+        FROM movies m
+        JOIN movie_poster p ON m.id = p.id
+        LIMIT 50;
+    """
     try:
         conn = get_db_conn()
         cur = conn.cursor()
@@ -32,30 +41,18 @@ def get_movies():
         return jsonify({"error": str(e)}), 500
     finally:
         try:
-            cur.close(); conn.close()
-        except Exception:
+            cur.close()
+            conn.close()
+        except:
             pass
 
-# === Endpoint 2: filter movie berdasarkan judul ===
-@app.get("/movies/filter")
-def filter_movies():
-    title = request.args.get("title", "")
-    sql = f"SELECT * FROM movies WHERE title LIKE %s LIMIT 50;"
+# === Endpoint 2: tampilkan semua movie ===
+@app.get("/movies")
+def get_movies():
+    sql = f"SELECT * FROM movies LIMIT 50;"
     try:
         conn = get_db_conn()
         cur = conn.cursor()
-        cur.execute(sql, (f"%{title}%",))
+        cur.execute(sql)
         cols = [d[0] for d in cur.description]
-        data = [dict(zip(cols, row)) for row in cur.fetchall()]
-        return jsonify(data)
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-    finally:
-        try:
-            cur.close(); conn.close()
-        except Exception:
-            pass
-
-if __name__ == "__main__":
-    # Local run: python app/main.py
-    app.run(host="0.0.0.0", port=8000)
+        data = [dict(zip(col]()
