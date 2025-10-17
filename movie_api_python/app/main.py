@@ -1,15 +1,19 @@
 from flask import Flask, jsonify
 import mysql.connector
 
-# ==== HARD-CODED SETTINGS (change here for your class) ====
+# ==== DATABASE SETTING ====
 DB_HOST = "103.16.116.159"
 DB_PORT = 3306
 DB_USER = "devops"
 DB_PASSWORD = "ubaya"
-DB_NAME = "movie"   # change if your DB name differs
-# ==========================================================
+DB_NAME = "movie"
+# ==========================
 
 app = Flask(__name__)
+
+@app.route("/")
+def home():
+    return "Server Flask aktif dan siap!"
 
 def get_db_conn():
     return mysql.connector.connect(
@@ -17,9 +21,14 @@ def get_db_conn():
         password=DB_PASSWORD, database=DB_NAME
     )
 
-@app.get("/movies")
-def get_movies():
-    sql = f"SELECT * FROM  movies LIMIT 50;"
+@app.route("/movies/posters", methods=["GET"])
+def get_movies_with_posters():
+    sql = """
+        SELECT m.id, m.title, p.poster AS poster_url
+        FROM movies m
+        JOIN movie_poster p ON m.id = p.id
+        LIMIT 50;
+    """
     try:
         conn = get_db_conn()
         cur = conn.cursor()
@@ -31,10 +40,12 @@ def get_movies():
         return jsonify({"error": str(e)}), 500
     finally:
         try:
-            cur.close(); conn.close()
-        except Exception:
+            cur.close()
+            conn.close()
+        except:
             pass
 
+
 if __name__ == "__main__":
-    # Local run: python app/main.py
+    print("Flask routes:", app.url_map)
     app.run(host="0.0.0.0", port=8000)
